@@ -1,8 +1,8 @@
-User
+
 import socket
 
-SERVERHOST = '0.0.0.0'  # 모든 네트워크 인터페이스에서 연결 허용
-SERVERPORT = yourserverport
+SERVER_HOST = '0.0.0.0'  # 모든 네트워크 인터페이스에서 연결 허용
+SERVER_PORT = yourserverport
 
 def main():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
@@ -24,5 +24,5 @@ def main():
                 except ConnectionResetError:
                     print("Connection closed by client")
 
-if __name == "__main":
+if __name__ == "__main__":
     main()
