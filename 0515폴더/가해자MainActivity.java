@@ -1,4 +1,4 @@
-package com.naver.gps0503;
+package com.example.알맞은폴더명;
 
 import android.Manifest;
 import android.app.AlertDialog;
@@ -20,7 +20,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 
-import com.naver.gps0503.GpsTracker;
+import com.naver.알맞은폴더명(connect0511).GpsTracker;
 
 import java.io.DataInputStream;
 import java.io.IOException;
