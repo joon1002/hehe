@@ -1,4 +1,4 @@
-package com.example.victim0516;
+package com.naver.gps0503;
 
 import android.Manifest;
 import android.app.AlertDialog;
@@ -69,8 +69,6 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private final Object lock = new Object(); // Lock 객체 생성
-
     private void sendLocationToServer(final double latitude, final double longitude, final TextView textview_distance) {
         new Thread(new Runnable() {
             @Override
@@ -88,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
 
                     // 서버로부터 수정된 거리 수신
                     double receivedDistance = inputStream.readDouble();
-                    modifiedDistance = receivedDistance + 100;
+                    modifiedDistance = receivedDistance + 1;
 
                     socket.close();
 
@@ -96,30 +94,19 @@ public class MainActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            textview_distance.setText("수정된 거리: " + modifiedDistance);
+                            textview_distance.setText("수정된 거리: " + modifiedDistance+"km");
                         }
                     });
-
-                    // 서버로부터 거리를 받은 후에 다시 대기 상태로 진입
-                    synchronized (lock) {
-                        lock.notify(); // 대기 중인 스레드를 깨움
-                    }
 
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         }).start();
-
-        // 서버로부터 거리를 받을 때까지 대기
-        synchronized (lock) {
-            try {
-                lock.wait(); // 다른 스레드에 의해 notify() 호출될 때까지 대기
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
     }
+
+    // Existing methods like checkLocationServicesStatus(), showDialogForLocationServiceSetting(), checkRunTimePermission(), getCurrentAddress() remain unchanged.
+
 
 
     // Other methods such as getCurrentAddress, checkLocationServicesStatus, etc.
@@ -142,8 +129,7 @@ public class MainActivity extends AppCompatActivity {
                                            @NonNull String[] permissions,
                                            @NonNull int[] grandResults) {
 
-        super.onRequestPermissionsResult(permsRequestCode, permissions, grandResults);
-        if (permsRequestCode == PERMISSIONS_REQUEST_CODE && grandResults.length == REQUIRED_PERMISSIONS.length) {
+        if ( permsRequestCode == PERMISSIONS_REQUEST_CODE && grandResults.length == REQUIRED_PERMISSIONS.length) {
 
             // 요청 코드가 PERMISSIONS_REQUEST_CODE 이고, 요청한 퍼미션 개수만큼 수신되었다면
 
@@ -160,11 +146,12 @@ public class MainActivity extends AppCompatActivity {
             }
 
 
-            if (check_result) {
+            if ( check_result ) {
 
                 //위치 값을 가져올 수 있음
                 ;
-            } else {
+            }
+            else {
                 // 거부한 퍼미션이 있다면 앱을 사용할 수 없는 이유를 설명해주고 앱을 종료합니다.2 가지 경우가 있습니다.
 
                 if (ActivityCompat.shouldShowRequestPermissionRationale(this, REQUIRED_PERMISSIONS[0])
@@ -174,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
                     finish();
 
 
-                } else {
+                }else {
 
                     Toast.makeText(MainActivity.this, "퍼미션이 거부되었습니다. 설정(앱 정보)에서 퍼미션을 허용해야 합니다. ", Toast.LENGTH_LONG).show();
 
