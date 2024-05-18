@@ -4,10 +4,9 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-
 public class Server {
     private static final int SERVER_PORT = 10716;
-    private static final double EARTH_RADIUS = 6371e3; // 지구 반지름 (미터)
+    private static final double EARTH_RADIUS = 6371.01; // 지구 반지름 (킬로미터)
 
     public static void main(String[] args) {
         try (ServerSocket serverSocket = new ServerSocket(SERVER_PORT)) {
@@ -33,18 +32,12 @@ public class Server {
                 System.out.println("Client " + (i + 1) + " Latitude: " + latitudes[i] + ", Longitude: " + longitudes[i] + ", String: " + strings[i]);
             }
 
-            // 위도와 경도의 차이를 계산하여 두 지점 간의 거리를 메터 단위로 계산
-            double latitudeDifference = Math.toRadians(latitudes[1] - latitudes[0]);
-            double longitudeDifference = Math.toRadians(longitudes[1] - longitudes[0]);
-            double a = Math.sin(latitudeDifference / 2) * Math.sin(latitudeDifference / 2)
-                    + Math.cos(Math.toRadians(latitudes[0])) * Math.cos(Math.toRadians(latitudes[1]))
-                    * Math.sin(longitudeDifference / 2) * Math.sin(longitudeDifference / 2);
-            double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            double distance = EARTH_RADIUS * c;
+            // 위도와 경도의 차이를 계산하여 거리 구함
+            double distance = calculateHaversineDistance(latitudes[0], longitudes[0], latitudes[1], longitudes[1]);
+            System.out.println("Calculated Distance using Haversine formula: " + distance + " km");
 
-            System.out.println("Calculated Distance: " + distance + " meters");
-
-            // 문자열이 '가해자'인 클라이언트에게 거리 전송
+            // 문자열이 '가해자'인 클라이언트에게 거리 전송 및 수정된 거리 수신
+            double modifiedDistance = 0;
             for (int i = 0; i < 2; i++) {
                 if ("가해자".equals(strings[i])) {
                     DataOutputStream outputStream = new DataOutputStream(clientSockets[i].getOutputStream());
@@ -52,13 +45,41 @@ public class Server {
                     outputStream.flush();
 
                     // 클라이언트로부터 수정된 거리 수신
-                    double modifiedDistance = new DataInputStream(clientSockets[i].getInputStream()).readDouble();
+                    modifiedDistance = new DataInputStream(clientSockets[i].getInputStream()).readDouble();
                     System.out.println("Received modified distance from 가해자: " + modifiedDistance);
+                }
+            }
+
+            // 수정된 거리를 피해자에게 전송
+            for (int i = 0; i < 2; i++) {
+                if ("피해자".equals(strings[i])) {
+                    DataOutputStream outputStream = new DataOutputStream(clientSockets[i].getOutputStream());
+                    outputStream.writeDouble(modifiedDistance);
+                    outputStream.flush();
+                    System.out.println("Sent modified distance to 피해자: " + modifiedDistance);
                 }
             }
 
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    // 하버사인 공식을 이용하여 두 지점 간의 거리를 계산하는 메서드
+    private static double calculateHaversineDistance(double lat1, double lon1, double lat2, double lon2) {
+        double lat1Rad = Math.toRadians(lat1);
+        double lon1Rad = Math.toRadians(lon1);
+        double lat2Rad = Math.toRadians(lat2);
+        double lon2Rad = Math.toRadians(lon2);
+
+        double deltaLat = lat2Rad - lat1Rad;
+        double deltaLon = lon2Rad - lon1Rad;
+
+        double a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2)
+                + Math.cos(lat1Rad) * Math.cos(lat2Rad)
+                * Math.sin(deltaLon / 2) * Math.sin(deltaLon / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return EARTH_RADIUS * c;
     }
 }
