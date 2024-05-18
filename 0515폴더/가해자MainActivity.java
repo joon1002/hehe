@@ -1,4 +1,4 @@
-package com.example.알맞은폴더명;
+package com.example.connect0511;
 
 import android.Manifest;
 import android.app.AlertDialog;
@@ -20,7 +20,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 
-import com.naver.알맞은폴더명(connect0511).GpsTracker;
+import com.example.connect0511.GpsTracker;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -61,8 +61,8 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View arg0) {
                 gpsTracker = new GpsTracker(MainActivity.this);
 
-                double latitude = gpsTracker.getLatitude();
-                double longitude = gpsTracker.getLongitude();
+                float latitude = gpsTracker.getLatitude();
+                float longitude = gpsTracker.getLongitude();
 
                 String address = getCurrentAddress(latitude, longitude);
                 textview_address.setText("위도: " + latitude + "\n경도: " + longitude + "\n주소: " + address);
@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void sendLocationToServer(final double latitude, final double longitude) {
+    private void sendLocationToServer(final float latitude, final float longitude) {
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -83,18 +83,18 @@ public class MainActivity extends AppCompatActivity {
                     DataInputStream inputStream = new DataInputStream(socket.getInputStream());
 
                     // 위도, 경도 및 문자열 전송
-                    outputStream.writeDouble(latitude);
-                    outputStream.writeDouble(longitude);
+                    outputStream.writeFloat(latitude);
+                    outputStream.writeFloat(longitude);
                     outputStream.writeUTF("가해자");
                     outputStream.flush();
 
                     // 서버로부터 거리 수신
-                    double distance = inputStream.readDouble();
+                    float distance = inputStream.readFloat();
                     System.out.println("Received distance from server: " + distance);
 
                     // 거리 +1 해서 서버로 다시 전송
-                    double modifiedDistance = distance + 1;
-                    outputStream.writeDouble(modifiedDistance);
+                    float modifiedDistance = distance + 1;
+                    outputStream.writeFloat(modifiedDistance);
                     outputStream.flush();
                     System.out.println("Sent modified distance to server: " + modifiedDistance);
 
@@ -204,7 +204,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public String getCurrentAddress( double latitude, double longitude) {
+    public String getCurrentAddress( float latitude, float longitude) {
 
         //지오코더... GPS를 주소로 변환
         Geocoder geocoder = new Geocoder(this, Locale.getDefault());
