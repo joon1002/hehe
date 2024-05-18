@@ -18,10 +18,16 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
 
 
 import com.example.connect0511.GpsTracker;
 
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
@@ -38,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int PERMISSIONS_REQUEST_CODE = 100;
     String[] REQUIRED_PERMISSIONS  = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};
 
-    private static final String SERVER_IP = "35.225.177.28"; // 서버의 IP 주소
+    private static final String SERVER_IP = "34.125.140.55"; // 서버의 IP 주소
     private static final int SERVER_PORT = 10716; // 서버의 포트 번호
 
     @Override
@@ -72,17 +78,29 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void sendLocationToServer(final double latitude, final double longitude) {
+    private static void sendLocationToServer(final double latitude, final double longitude) {
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
                     Socket socket = new Socket(SERVER_IP, SERVER_PORT);
-                    DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream());
-                    outputStream.writeDouble(latitude);
-                    outputStream.writeDouble(longitude);
+                    PrintWriter outputStream = new PrintWriter(socket.getOutputStream(), true);
+                    BufferedReader inputStream = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
+                    // 위도, 경도 및 문자열 전송
+                    outputStream.println(latitude);
+                    outputStream.println(longitude);
+                    outputStream.println("가해자");
 
+                    // 서버로부터 거리 수신
+                    String distanceStr = inputStream.readLine();
+                    double distance = Double.parseDouble(distanceStr);
+                    System.out.println("Received distance from server: " + distance);
+
+                    // 거리 +1 해서 서버로 다시 전송
+                    double modifiedDistance = distance + 1;
+                    outputStream.println(modifiedDistance);
+                    System.out.println("Sent modified distance to server: " + modifiedDistance);
 
                     socket.close();
                 } catch (IOException e) {
@@ -92,6 +110,10 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
+
+
+
+
     /*
      * ActivityCompat.requestPermissions를 사용한 퍼미션 요청의 결과를 리턴받는 메소드입니다.
      */
@@ -100,8 +122,7 @@ public class MainActivity extends AppCompatActivity {
                                            @NonNull String[] permissions,
                                            @NonNull int[] grandResults) {
 
-        super.onRequestPermissionsResult(permsRequestCode, permissions, grandResults);
-        if (permsRequestCode == PERMISSIONS_REQUEST_CODE && grandResults.length == REQUIRED_PERMISSIONS.length) {
+        if ( permsRequestCode == PERMISSIONS_REQUEST_CODE && grandResults.length == REQUIRED_PERMISSIONS.length) {
 
             // 요청 코드가 PERMISSIONS_REQUEST_CODE 이고, 요청한 퍼미션 개수만큼 수신되었다면
 
@@ -118,11 +139,12 @@ public class MainActivity extends AppCompatActivity {
             }
 
 
-            if (check_result) {
+            if ( check_result ) {
 
                 //위치 값을 가져올 수 있음
                 ;
-            } else {
+            }
+            else {
                 // 거부한 퍼미션이 있다면 앱을 사용할 수 없는 이유를 설명해주고 앱을 종료합니다.2 가지 경우가 있습니다.
 
                 if (ActivityCompat.shouldShowRequestPermissionRationale(this, REQUIRED_PERMISSIONS[0])
@@ -132,7 +154,7 @@ public class MainActivity extends AppCompatActivity {
                     finish();
 
 
-                } else {
+                }else {
 
                     Toast.makeText(MainActivity.this, "퍼미션이 거부되었습니다. 설정(앱 정보)에서 퍼미션을 허용해야 합니다. ", Toast.LENGTH_LONG).show();
 
