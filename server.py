@@ -18,18 +18,7 @@ def calculate_haversine_distance(lat1, lon1, lat2, lon2):
 
     return EARTH_RADIUS * c
 
-def main():
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind(('', SERVER_PORT))
-    server_socket.listen(2)  # 두 개의 클라이언트 연결 대기
-    print(f"[] Listening on port {SERVER_PORT}")
-
-    client_sockets = []
-    for i in range(2):
-        client_socket, addr = server_socket.accept()
-        print(f"[] Accepted connection from {addr}")
-        client_sockets.append(client_socket)
-
+def handle_client_connections(client_sockets):
     latitudes = []
     longitudes = []
     strings = []
@@ -62,6 +51,27 @@ def main():
 
     for client_socket in client_sockets:
         client_socket.close()
+
+def main():
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.bind(('', SERVER_PORT))
+    server_socket.listen(2)  # 두 개의 클라이언트 연결 대기
+    print(f"[] Listening on port {SERVER_PORT}")
+
+    try:
+        while True:
+            client_sockets = []
+            for i in range(2):
+                client_socket, addr = server_socket.accept()
+                print(f"[] Accepted connection from {addr}")
+                client_sockets.append(client_socket)
+            
+            handle_client_connections(client_sockets)
+
+    except KeyboardInterrupt:
+        print("Server shutting down.")
+    finally:
+        server_socket.close()
 
 if __name__ == "__main__":
     main()
