@@ -114,6 +114,19 @@ int main() {
             boost::asio::write(socket, boost::asio::buffer(result_data));
             std::cout << "Sent result to victim" << std::endl;
 
+            // Check for distance message from victim client
+            boost::system::error_code error;
+            boost::asio::streambuf buffer;
+            boost::asio::read(socket, buffer, error);
+            if (!error || error == boost::asio::error::eof) {
+                std::istream is(&buffer);
+                std::string distance_message;
+                std::getline(is, distance_message);
+                if (distance_message == "1000미터 이내입니다.") {
+                    std::cout << "접근제한 거리 이내에 피해자가 있습니다" << std::endl;
+                }
+            }
+
             // Reset for next client pair
             victim_received = false;
         }
