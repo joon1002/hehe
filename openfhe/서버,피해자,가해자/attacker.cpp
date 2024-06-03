@@ -10,7 +10,7 @@ int main() {
         boost::asio::io_context io_context;
 
         // Server address and port
-        std::string server_address = "34.68.87.163"; // Change to your server's IP address
+        std::string server_address = "34.123.52.9"; // Change to your server's IP address
         std::string server_port = "33333"; // Change to your server's listening port
 
         // Try to connect to the server
