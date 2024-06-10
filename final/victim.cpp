@@ -8,30 +8,13 @@
 using namespace lbcrypto;
 using boost::asio::ip::tcp;
 
-double haversine(double lat1, double lon1, double lat2, double lon2) {
-    const double R = 6371000; // Earth radius in meters
-    double dLat = (lat2 - lat1) * M_PI / 180.0;
-    double dLon = (lon2 - lon1) * M_PI / 180.0;
-
-    lat1 = lat1 * M_PI / 180.0;
-    lat2 = lat2 * M_PI / 180.0;
-
-    double a = sin(dLat/2) * sin(dLat/2) +
-               cos(lat1) * cos(lat2) * 
-               sin(dLon/2) * sin(dLon/2);
-    double c = 2 * atan2(sqrt(a), sqrt(1-a));
-    double distance = R * c;
-
-    return distance;
-}
-
 int main() {
     try {
         // Initialize Boost ASIO for network communication
         boost::asio::io_context io_context;
 
         // Server address and port
-        std::string server_address = "34.125.140.55"; // Change to your server's IP address
+        std::string server_address = "34.45.157.39"; // Change to your server's IP address
         std::string server_port = "33333"; // Change to your server's listening port
 
         // Try to connect to the server
@@ -67,8 +50,8 @@ int main() {
         std::cin >> longitude;
 
         // Convert to integer with scaling
-        int64_t intLatitude = static_cast<int64_t>(latitude * 100);
-        int64_t intLongitude = static_cast<int64_t>(longitude * 100);
+        int64_t intLatitude = static_cast<int64_t>(latitude * 1000); // scaling to 3 decimal places
+        int64_t intLongitude = static_cast<int64_t>(longitude * 1000); // scaling to 3 decimal places
 
         // Encrypt data
         std::vector<int64_t> coordinates = {intLatitude, intLongitude};
@@ -120,17 +103,32 @@ int main() {
 
         // Output the decrypted coordinates
         auto received_coords = plaintext_result->GetPackedValue();
-        double latitude_diff = static_cast<double>(received_coords[0]) / 100;
-        double longitude_diff = static_cast<double>(received_coords[1]) / 100;
-        std::cout << "Final Processed Latitude Difference: " << latitude_diff << std::endl;
-        std::cout << "Final Processed Longitude Difference: " << longitude_diff << std::endl;
+        std::cout << "Final Processed Latitude Difference: " << static_cast<double>(received_coords[0]) / 1000 << std::endl;
+        std::cout << "Final Processed Longitude Difference: " << static_cast<double>(received_coords[1]) / 1000 << std::endl;
 
         // Calculate distance using Haversine formula
-        double distance = haversine(latitude, longitude, latitude + latitude_diff, longitude + longitude_diff);
-        std::cout << "Distance: " << distance << " meters" << std::endl;
+        double lat_diff = static_cast<double>(received_coords[0]) / 1000;
+        double lon_diff = static_cast<double>(received_coords[1]) / 1000;
+        double earth_radius = 6371000; // in meters
+
+        double dlat = (lat_diff) * (M_PI / 180.0);
+        double dlon = (lon_diff) * (M_PI / 180.0);
+
+        double a = sin(dlat / 2) * sin(dlat / 2) + cos(latitude * (M_PI / 180.0)) * cos((latitude + lat_diff) * (M_PI / 180.0)) * sin(dlon / 2) * sin(dlon / 2);
+        double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+
+        double distance = earth_radius * c;
+        std::cout << "\nDistance: " << distance << " meters" << std::endl;
 
         if (distance < 1000) {
-            std::cout << "가해자가 접근제한 거리를 위반하였습니다" << std::endl;
+            std::cout << "\n가해자가 접근제한 거리를 위반하였습니다.\n서버에 위치를 전송합니다" << std::endl;
+
+            // Send alert and original coordinates to server
+            char alert_message[256] = "가해자가 접근제한 거리를 위반하였습니다.";
+            boost::asio::write(socket, boost::asio::buffer(alert_message, 256));
+            //접근제한 거리를 위반 한 경우에만. 자신의 위도경도 평문 전송
+            boost::asio::write(socket, boost::asio::buffer(&latitude, sizeof(latitude)));
+            boost::asio::write(socket, boost::asio::buffer(&longitude, sizeof(longitude)));
         }
 
     } catch (std::exception& e) {
