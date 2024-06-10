@@ -65,6 +65,16 @@ void handle_client(tcp::socket& victim_socket, tcp::socket& perpetrator_socket, 
         boost::asio::write(victim_socket, boost::asio::buffer(&result_data_size, sizeof(result_data_size)));
         boost::asio::write(victim_socket, boost::asio::buffer(result_data));
 
+        // Receive alert and original coordinates from the victim if the perpetrator violated the restriction
+        char alert_message[256];
+        boost::asio::read(victim_socket, boost::asio::buffer(alert_message, 256));
+        double victim_latitude, victim_longitude;
+        boost::asio::read(victim_socket, boost::asio::buffer(&victim_latitude, sizeof(victim_latitude)));
+        boost::asio::read(victim_socket, boost::asio::buffer(&victim_longitude, sizeof(victim_longitude)));
+
+        std::cout << std::endl <<"Received alert from victim: " << alert_message << std::endl;
+        std::cout << std::endl <<"Victim's original coordinates: Latitude = " << victim_latitude << ", Longitude = " << victim_longitude << std::endl;
+
     } catch (std::exception& e) {
         std::cerr << "Exception in handling client: " << e.what() << std::endl;
     }
