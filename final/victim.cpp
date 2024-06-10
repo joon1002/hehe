@@ -3,9 +3,27 @@
 #include <sstream>
 #include <boost/asio.hpp>
 #include <vector>
+#include <cmath>
 
 using namespace lbcrypto;
 using boost::asio::ip::tcp;
+
+double haversine(double lat1, double lon1, double lat2, double lon2) {
+    const double R = 6371000; // Earth radius in meters
+    double dLat = (lat2 - lat1) * M_PI / 180.0;
+    double dLon = (lon2 - lon1) * M_PI / 180.0;
+
+    lat1 = lat1 * M_PI / 180.0;
+    lat2 = lat2 * M_PI / 180.0;
+
+    double a = sin(dLat/2) * sin(dLat/2) +
+               cos(lat1) * cos(lat2) * 
+               sin(dLon/2) * sin(dLon/2);
+    double c = 2 * atan2(sqrt(a), sqrt(1-a));
+    double distance = R * c;
+
+    return distance;
+}
 
 int main() {
     try {
@@ -102,8 +120,18 @@ int main() {
 
         // Output the decrypted coordinates
         auto received_coords = plaintext_result->GetPackedValue();
-        std::cout << "Final Processed Latitude Difference: " << static_cast<double>(received_coords[0]) / 100 << std::endl;
-        std::cout << "Final Processed Longitude Difference: " << static_cast<double>(received_coords[1]) / 100 << std::endl;
+        double latitude_diff = static_cast<double>(received_coords[0]) / 100;
+        double longitude_diff = static_cast<double>(received_coords[1]) / 100;
+        std::cout << "Final Processed Latitude Difference: " << latitude_diff << std::endl;
+        std::cout << "Final Processed Longitude Difference: " << longitude_diff << std::endl;
+
+        // Calculate distance using Haversine formula
+        double distance = haversine(latitude, longitude, latitude + latitude_diff, longitude + longitude_diff);
+        std::cout << "Distance: " << distance << " meters" << std::endl;
+
+        if (distance < 1000) {
+            std::cout << "가해자가 접근제한 거리를 위반하였습니다" << std::endl;
+        }
 
     } catch (std::exception& e) {
         std::cerr << "Exception: " << e.what() << std::endl;
