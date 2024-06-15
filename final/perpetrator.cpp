@@ -13,7 +13,7 @@ int main() {
         boost::asio::io_context io_context;
 
         // Server address and port
-        std::string server_address = "34.45.157.39"; // Change to your server's IP address
+        std::string server_address = "34.170.213.159"; // Change to your server's IP address
         std::string server_port = "33333"; // Change to your server's listening port
 
         // Try to connect to the server
@@ -57,9 +57,11 @@ int main() {
         std::cout << "Enter longitude: ";
         std::cin >> longitude;
 
-        // Convert to integer with scaling
-        int64_t intLatitude = static_cast<int64_t>(latitude * 1000);
-        int64_t intLongitude = static_cast<int64_t>(longitude * 1000);
+        // Adjust and scale coordinates
+        double adjustedLatitude = latitude - 36.0;
+        double adjustedLongitude = longitude - 125.0;
+        int64_t intLatitude = static_cast<int64_t>(adjustedLatitude * 10000); // scaling to 4 decimal places
+        int64_t intLongitude = static_cast<int64_t>(adjustedLongitude * 10000); // scaling to 4 decimal places
 
         // Encrypt data
         std::vector<int64_t> coordinates = {intLatitude, intLongitude};
