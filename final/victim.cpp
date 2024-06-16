@@ -14,7 +14,7 @@ int main() {
         boost::asio::io_context io_context;
 
         // Server address and port
-        std::string server_address = "34.170.213.159"; // Change to your server's IP address
+        std::string server_address = "34.125.140.55"; // Change to your server's IP address
         std::string server_port = "33333"; // Change to your server's listening port
 
         // Try to connect to the server
@@ -105,12 +105,12 @@ int main() {
 
         // Output the decrypted coordinates
         auto received_coords = plaintext_result->GetPackedValue();
-        std::cout << "Final Processed Latitude Difference: " << static_cast<double>(received_coords[0]) / 1000 << std::endl;
-        std::cout << "Final Processed Longitude Difference: " << static_cast<double>(received_coords[1]) / 1000 << std::endl;
+        std::cout << "Final Processed Latitude Difference: " << static_cast<double>(received_coords[0]) / 10000 << std::endl;
+        std::cout << "Final Processed Longitude Difference: " << static_cast<double>(received_coords[1]) / 10000 << std::endl;
 
         // Calculate distance using Haversine formula
-        double lat_diff = static_cast<double>(received_coords[0]) / 1000;
-        double lon_diff = static_cast<double>(received_coords[1]) / 1000;
+        double lat_diff = static_cast<double>(received_coords[0]) / 10000;
+        double lon_diff = static_cast<double>(received_coords[1]) / 10000;
         double earth_radius = 6371000; // in meters
 
         double dlat = (lat_diff) * (M_PI / 180.0);
